@@ -51,6 +51,11 @@ def color_draw(G):
     nx.draw(G, node_color=color_map, with_labels=True)
     return None 
 
+
+# Wattz Strogartz network 
+
+
+
 '''
 #Barabasi-Albert
 
@@ -74,7 +79,7 @@ for network_size in network_sizes:
 with open("Assignment1/output.csv", "w", newline="") as f:
     writer = csv.writer(f)
     writer.writerows(output)
-'''
+
 
 # Erdos-Renyi 
 network_sizes = [10, 100, 1000]
@@ -98,3 +103,4 @@ with open("Assignment1/output.csv", "w", newline="") as f:
     writer = csv.writer(f)
     writer.writerows(output)
 
+'''
