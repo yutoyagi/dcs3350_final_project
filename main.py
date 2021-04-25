@@ -126,17 +126,52 @@ def color_draw(G):
 def hard_lockdown(G, beta):
     # delete edges 
     # reduce beta because of mask 
-    new_G = G
-    new_beta = beta
-    return (new_G, new_beta)
+infected_nodes = []
+compliance_level = range(0.7, 0.999)
+compliant_infected_nodes = [] #theoretically we must only isolate infected nodes, but since we can't identify all infected nodes, in practice we must isolate all nodes
+compliant_infected_nodes = compliance_level * len(infected_nodes)
+dissident_infected_nodes = []
+dissident_infected_nodes = (1 - compliance_level) * len(infected_nodes)
+beta = b
+average_degree_of_node = k
+new_average_degree_of_node = h #determined as household size
+
+for i in G.nodes:
+  if G.nodes[i]['I']: 
+  append(i).infected_nodes
+  
+for i in infected_nodes:
+  if i is in compliant_infected_nodes:
+    degree_of_node(i) = new_average_degree_of_node
+   else:
+    degree_of_node(i) = average_degree_of_node
 
 # TODO: this function takes Graph G and beta value beta, and returns modified G and beta
 def soft_lockdown(G, beta):
     # delete edges 
     # reduce beta because of mask 
-    new_G = G
-    new_beta = beta
-    return (new_G, new_beta)
+infected_nodes = []
+compliance_level = range(0.7, 0.999)
+compliant_infected_nodes = [] #theoretically we must only isolate infected nodes, but since we can't identify all infected nodes, in practice we must isolate all nodes
+compliant_infected_nodes = compliance_level * len(infected_nodes)
+dissident_infected_nodes = []
+dissident_infected_nodes = (1 - compliance_level) * len(infected_nodes)
+beta = b
+beta_after_mask_wearing = b * range(0.4, 0.8) #reduction of infectiousness dependent upon type of mask worn and individual's symptomatic condition or viral load
+average_degree_of_node = k
+average_household_size = h
+new_average_degree_of_node = k * range(h, k)
+
+for i in G.nodes:
+  if G.nodes[i]['I']: 
+  append(i).infected_nodes
+  
+for i in infected_nodes:
+  if i is in compliant_infected_nodes:
+    degree_of_node(i) = new_average_degree_of_node
+    beta(i) = beta_after_mask_wearing
+   else:
+    degree_of_node(i) = average_degree_of_node
 
 
 
