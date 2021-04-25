@@ -29,7 +29,7 @@ def SI(G, beta):
     return t
 
 
-
+# run SEIR model until 36% of nodes are infected
 def SEIR(G, beta):
     # randomly infect one node
     rand_idx = random.randrange(0, G.number_of_nodes())
@@ -40,19 +40,6 @@ def SEIR(G, beta):
     t = 0
     while count_infected(G) <= (G.number_of_nodes()*0.36):
 
-"""
-        # S- >E
-        infected_nodes = [i for i in G.nodes if G.nodes[i]['Infected'] ]
-        for i in infected_nodes:
-            # for each neigbor
-            for nbr in G.neighbors(i):
-                G.nodes[nbr]['Exposed'] = True
-                if random.random() <= beta:
-                    # this neighbor is infected
-                    G.nodes[nbr]['Turn_I_at_t=x'] = t + random.randint(1,10) 
-                else:
-                    G.nodes[nbr]['Turn_S_at_t=x'] = t + 10
-"""
 
         # E- >I, E->S, I->R
         for i in G.nodes:
@@ -64,15 +51,15 @@ def SEIR(G, beta):
                     G.nodes[nbr]['Turn_I_at_t=x'] = None
                 if G.nodes[nbr]['Turn_S_at_t=x'] and G.nodes[nbr]['Turn_I_at_t=x'] <= t:
                     G.nodes[nbr]['Exposed'] = False
-                    G.nodes[nbr]['Suseptible'] = True
+                    G.nodes[nbr]['Susceptible'] = True
                     G.nodes[nbr]['Turn_S_at_t=x'] = None
 
 
-            else if G.nodes[i]['Infected']: 
+            elif G.nodes[i]['Infected']: 
                 # infect others
                 for nbr in G.neighbors(i):
-                    if G.nodes[nbr]['Suseptible']:
-                        G.nodes[nbr]['Suseptible'] = False
+                    if G.nodes[nbr]['Susceptible']:
+                        G.nodes[nbr]['Susceptible'] = False
                         G.nodes[nbr]['Exposed'] = True
                         if random.random() <= beta:
                             # this neighbor is infected
@@ -87,6 +74,8 @@ def SEIR(G, beta):
                 
         t+=1
         print(t)
+
+        ## stop if it takes tooo long
         if t >= 100000:
             break
         #color_draw(G)
@@ -129,28 +118,32 @@ def soft_lockdown(G, beta):
     # reduce beta because of mask 
     return (new_G, new_beta)
 
+
+
+
 # Wattz Strogartz network 
 
 output = [] # list of list [network_size, beta, avg_degree, time]
 n = 100     
 k = 5       # household's size
 p = 0.3     
+beta = 0.1
 
 # lower beta with stronger lockdown
 
 G = nx.watts_strogatz_graph(n, k, p, seed=None)
 # TODO: add dissident node
 for i in G.nodes: 
-    G.nodes[i]['Suceptible'] = True
+    G.nodes[i]['Susceptible'] = True
     G.nodes[i]['Exposed'] = False
-    G.nodes[nbr]['Turn_I_at_t=x'] = None
-    G.nodes[nbr]['Turn_S_at_t=x'] = None
+    G.nodes[i]['Turn_I_at_t=x'] = None
+    G.nodes[i]['Turn_S_at_t=x'] = None
     G.nodes[i]['Infected'] = False
     G.nodes[i]['Infected_t'] = None
     G.nodes[i]['Recovered'] = False
 
 avg_degree = get_avg_degree(G)
-time = SI(G, beta)
+time = SEIR(G, beta)
 output.append([network_size, beta, avg_degree, time])
         
 with open("output.csv", "w", newline="") as f:
