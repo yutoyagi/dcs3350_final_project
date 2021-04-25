@@ -6,116 +6,136 @@ import random
 import csv
 
 # helper functions
+
+"""
 def SI(G, beta):
     # randomly infect one node
     rand_idx = random.randrange(0, G.number_of_nodes())
-    G.nodes[rand_idx]['Infected'] = True
+    G.nodes[rand_idx]['I'] = True
     # run simulation
     t = 0
-    while count_infected(G) <= (G.number_of_nodes()*0.36):
-        # for each infected node
-        infected_nodes = [i for i in G.nodes if G.nodes[i]['Infected'] ]
-        for i in infected_nodes:
+    while count_I(G) <= (G.number_of_nodes()*0.36):
+        # for each I node
+        I_nodes = [i for i in G.nodes if G.nodes[i]['I'] ]
+        for i in I_nodes:
             # for each neigbor
             for nbr in G.neighbors(i):
                 if random.random() <= beta:
-                    # this neighbor is infected
-                    G.nodes[nbr]['Infected'] = True                    
+                    # this neighbor is I
+                    G.nodes[nbr]['I'] = True                    
         t+=1 
         print(t)
         if t >= 100000:
             break
         #color_draw(G)
     return t
+"""
 
-
-# run SEIR model until 36% of nodes are infected
+# run SEIR model until 36% of nodes are I
 def SEIR(G, beta):
+    """ Return the time it takes to infect 36% of the population"""
     # randomly infect one node
     rand_idx = random.randrange(0, G.number_of_nodes())
-    G.nodes[rand_idx]['Infected'] = True
-    G.nodes[rand_idx]['Infected_t'] = 0
+    G.nodes[rand_idx]['I'] = True
+    G.nodes[rand_idx]['I_t'] = 0
 
     # run simulation
     t = 0
-    while count_infected(G) <= (G.number_of_nodes()*0.36):
-
-
+    while count_I_and_R(G) <= (G.number_of_nodes()*0.36):
         # E- >I, E->S, I->R
         for i in G.nodes:
-            if G.nodes[i]['Exposed']: 
-                if G.nodes[nbr]['Turn_I_at_t=x'] and G.nodes[nbr]['Turn_I_at_t=x'] <= t:
-                    G.nodes[nbr]['Exposed'] = False
-                    G.nodes[nbr]['Infected'] = True
-                    G.nodes[nbr]['Infected_t'] = t
-                    G.nodes[nbr]['Turn_I_at_t=x'] = None
-                if G.nodes[nbr]['Turn_S_at_t=x'] and G.nodes[nbr]['Turn_I_at_t=x'] <= t:
-                    G.nodes[nbr]['Exposed'] = False
-                    G.nodes[nbr]['Susceptible'] = True
-                    G.nodes[nbr]['Turn_S_at_t=x'] = None
-
-
-            elif G.nodes[i]['Infected']: 
+            if G.nodes[i]['I']: 
                 # infect others
                 for nbr in G.neighbors(i):
-                    if G.nodes[nbr]['Susceptible']:
-                        G.nodes[nbr]['Susceptible'] = False
-                        G.nodes[nbr]['Exposed'] = True
+                    if G.nodes[nbr]['S']:
+                        G.nodes[nbr]['S'] = False
+                        G.nodes[nbr]['E'] = True
                         if random.random() <= beta:
-                            # this neighbor is infected
+                            # this neighbor will be Infected
                             G.nodes[nbr]['Turn_I_at_t=x'] = t + random.randint(1,10) 
+                            #print("will be infected on ", G.nodes[nbr]['Turn_I_at_t=x'])
                         else:
-                            G.nodes[nbr]['Turn_S_at_t=x'] = t + 10
-                # check if they should recover by now
-                if G.nodes[i]['Infected_t'] + 14 <= t:
-                    G.nodes[i]['Infected'] = False
-                    G.nodes[i]['Infected_t'] = None
-                    G.nodes[i]['Recovered'] = True
+                            # this neighbor will not be Infected
+                            G.nodes[nbr]['Turn_S_at_t=x'] = t + 10 # assume that quarantine for exposed people are 10 days
+                # node should recover after 14 days since infection time
+                if G.nodes[i]['I_t'] + 14 == t:
+                    G.nodes[i]['I'] = False
+                    G.nodes[i]['I_t'] = None
+                    G.nodes[i]['R'] = True            
+
+            if G.nodes[i]['E']:
+                if G.nodes[i]['Turn_I_at_t=x'] != None:
+                    if G.nodes[i]['Turn_I_at_t=x'] == t:
+                        G.nodes[i]['E'] = False
+                        G.nodes[i]['I'] = True
+                        G.nodes[i]['I_t'] = t
+                        G.nodes[i]['Turn_I_at_t=x'] = None
+                if G.nodes[i]['Turn_S_at_t=x'] != None: 
+                    if G.nodes[i]['Turn_S_at_t=x'] == t:
+                        G.nodes[i]['E'] = False
+                        G.nodes[i]['S'] = True
+                        G.nodes[i]['Turn_S_at_t=x'] = None
+
                 
         t+=1
-        print(t)
+        print("t=", t)
 
         ## stop if it takes tooo long
-        if t >= 100000:
+        if t >= 1000:
             break
         #color_draw(G)
     return t
 
 
 
-def count_infected(G):
+def count_I(G):
+    """Return the active infection count"""
     cnt = 0
     for i in G.nodes:
-        if G.nodes[i]['Infected']:
+        if G.nodes[i]['I']:
             cnt+=1
     return cnt
 
+def count_I_and_R(G):
+    """Return the cumuative infection count"""
+    cnt = 0
+    for i in G.nodes:
+        if G.nodes[i]['I'] or G.nodes[i]['R']:
+            cnt+=1
+    print(cnt)
+    return cnt
+
 def get_avg_degree(G):
+    """ takes a graph G and returns its average"""
     degrees = [G.degree[i] for i in G.nodes]
-    print(degrees)
     return sum(degrees)/len(degrees)
 
 # this function requires plt.show() to be called outside of this function
 def color_draw(G):
     color_map = []
     for i in G.nodes:
-        if G.nodes[i]['Infected']:
+        if G.nodes[i]['I']:
             color_map.append('red')
         else: 
             color_map.append('blue')     
     nx.draw(G, node_color=color_map, with_labels=True)
     return None 
 
-# this function takes Graph G and beta value beta, and returns modified G and beta
+
+# TODO: this function takes Graph G and beta value beta, and returns modified G and beta
 def hard_lockdown(G, beta):
     # delete edges 
     # reduce beta because of mask 
+    new_G = G
+    new_beta = beta
     return (new_G, new_beta)
 
-# this function takes Graph G and beta value beta, and returns modified G and beta
+# TODO: this function takes Graph G and beta value beta, and returns modified G and beta
 def soft_lockdown(G, beta):
     # delete edges 
     # reduce beta because of mask 
+    new_G = G
+    new_beta = beta
     return (new_G, new_beta)
 
 
@@ -124,27 +144,29 @@ def soft_lockdown(G, beta):
 # Wattz Strogartz network 
 
 output = [] # list of list [network_size, beta, avg_degree, time]
-n = 100     
+n = 50     
 k = 5       # household's size
 p = 0.3     
-beta = 0.1
+beta = 1
 
 # lower beta with stronger lockdown
 
 G = nx.watts_strogatz_graph(n, k, p, seed=None)
 # TODO: add dissident node
 for i in G.nodes: 
-    G.nodes[i]['Susceptible'] = True
-    G.nodes[i]['Exposed'] = False
+    G.nodes[i]['S'] = True
+    G.nodes[i]['E'] = False
     G.nodes[i]['Turn_I_at_t=x'] = None
     G.nodes[i]['Turn_S_at_t=x'] = None
-    G.nodes[i]['Infected'] = False
-    G.nodes[i]['Infected_t'] = None
-    G.nodes[i]['Recovered'] = False
+    G.nodes[i]['I'] = False
+    G.nodes[i]['I_t'] = None
+    G.nodes[i]['R'] = False
 
 avg_degree = get_avg_degree(G)
+#color_draw(G)
+#plt.show()
 time = SEIR(G, beta)
-output.append([network_size, beta, avg_degree, time])
+output.append([n, beta, avg_degree, time])
         
 with open("output.csv", "w", newline="") as f:
     writer = csv.writer(f)
@@ -165,7 +187,7 @@ for network_size in network_sizes:
         for beta in betas:
             G = nx.barabasi_albert_graph(network_size, m)
             for i in G.nodes: 
-                G.nodes[i]['Infected'] = False
+                G.nodes[i]['I'] = False
             avg_degree = get_avg_degree(G)
             time = SI(G, beta)
             output.append([network_size, beta, avg_degree, time])
@@ -187,7 +209,7 @@ for network_size in network_sizes:
         for beta in betas:
             G = nx.erdos_renyi_graph(network_size, prob)
             for i in G.nodes: 
-                G.nodes[i]['Infected'] = False
+                G.nodes[i]['I'] = False
             avg_degree = get_avg_degree(G)
             time = SI(G, beta)
             output.append([network_size, beta, avg_degree, time])
