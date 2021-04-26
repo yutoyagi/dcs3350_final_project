@@ -32,8 +32,8 @@ def SI(G, beta):
 """
 
 # run SEIR model until 36% of nodes are I
-def SEIR(G, beta):
-    """ Return the time it takes to infect 36% of the population"""
+def SEIR(G, beta, start_time = 0, end_time = 100000):
+    """ Return the time it takes to infect 36% of the population """
     # randomly infect one node
     rand_idx = random.randrange(0, G.number_of_nodes())
     G.nodes[rand_idx]['I'] = True
@@ -81,10 +81,10 @@ def SEIR(G, beta):
         print("t=", t)
 
         ## stop if it takes tooo long
-        if t >= 1000:
+        if t >= end_time:
             break
         #color_draw(G)
-    return t
+    return start_time + t
 
 
 
@@ -122,8 +122,9 @@ def color_draw(G):
     return None 
 
 
-# TODO: this function takes Graph G and beta value beta, and returns modified G and beta
+# TODO: debug
 def hard_lockdown(G, beta):
+    """ this function takes Graph G and beta value beta, and returns modified G and beta. """
     # delete edges 
     # reduce beta because of mask 
     infected_nodes = []
@@ -147,8 +148,9 @@ def hard_lockdown(G, beta):
             degree_of_node(i) = average_degree_of_node
     return None
 
-# TODO: this function takes Graph G and beta value beta, and returns modified G and beta
+# TODO: debug
 def soft_lockdown(G, beta):
+    """ this function takes Graph G and beta value beta, and returns modified G and beta. """
     # delete edges 
     # reduce beta because of mask 
     infected_nodes = []
