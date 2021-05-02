@@ -53,7 +53,7 @@ def SEIR(G, beta, start_time = 0, end_time = 100000):
                         if random.random() <= beta:
                             # this neighbor will be Infected
                             G.nodes[nbr]['Turn_I_at_t=x'] = t + random.randint(1,10) 
-                            #print("will be infected on ", G.nodes[nbr]['Turn_I_at_t=x'])
+                            # print("will be infected on ", G.nodes[nbr]['Turn_I_at_t=x'])
                         else:
                             # this neighbor will not be Infected
                             G.nodes[nbr]['Turn_S_at_t=x'] = t + 10 # assume that quarantine for exposed people are 10 days
@@ -85,7 +85,8 @@ def SEIR(G, beta, start_time = 0, end_time = 100000):
             break
         #color_draw(G)
     return start_time + t
-
+    # TODO: should return G, t
+    
 
 
 def count_I(G):
@@ -123,58 +124,34 @@ def color_draw(G):
 
 
 # TODO: debug
-def hard_lockdown(G, beta):
+def hard_lockdown(G, beta): 
     """ this function takes Graph G and beta value beta, and returns modified G and beta. """
-    # delete edges 
-    # reduce beta because of mask 
-    infected_nodes = []
-    compliance_level = range(0.7, 0.999)
-    compliant_infected_nodes = [] #theoretically we must only isolate infected nodes, but since we can't identify all infected nodes, in practice we must isolate all nodes
-    compliant_infected_nodes = compliance_level * len(infected_nodes)
-    dissident_infected_nodes = []
-    dissident_infected_nodes = (1 - compliance_level) * len(infected_nodes)
-    beta = b
-    average_degree_of_node = k
-    new_average_degree_of_node = h #determined as household size
-
-    for i in G.nodes:
-        if G.nodes[i]['I']: 
-            append(i).infected_nodes
+    compliance_level = 0.9
+    household_size = 5 #determined as household size
+    neighbors_to_remove = set()
     
-    for i in infected_nodes:
-        if i in compliant_infected_nodes:
-            degree_of_node(i) = new_average_degree_of_node
-        else:
-            degree_of_node(i) = average_degree_of_node
-    return None
+    for i in G.nodes:
+        # if compliant 
+        if random.random() <= compliance_level:
+            # reduce the edges to 5
+            neighbors = set(G.neighbors(i))
+            if len(neighbors) <= household_size:
+                neighbors_to_keep = neighbors
+            else:
+                neighbors_to_keep = set(random.sample(neighbors, household_size))
+            neighbors_to_remove = neighbors - neighbors_to_keep
+            for neighbors_to_remove in neighbors_to_remove:
+                G.remove_edge(i, neighbors_to_remove)
+
+    # reduce the beta value
+    new_beta = beta * 0.9
+    
+    return (G, new_beta)
 
 # TODO: debug
 def soft_lockdown(G, beta):
     """ this function takes Graph G and beta value beta, and returns modified G and beta. """
     # delete edges 
-    # reduce beta because of mask 
-    infected_nodes = []
-    compliance_level = range(0.7, 0.999)
-    compliant_infected_nodes = [] #theoretically we must only isolate infected nodes, but since we can't identify all infected nodes, in practice we must isolate all nodes
-    compliant_infected_nodes = compliance_level * len(infected_nodes)
-    dissident_infected_nodes = []
-    dissident_infected_nodes = (1 - compliance_level) * len(infected_nodes)
-    beta = b
-    beta_after_mask_wearing = b * range(0.4, 0.8) #reduction of infectiousness dependent upon type of mask worn and individual's symptomatic condition or viral load
-    average_degree_of_node = k
-    average_household_size = h
-    new_average_degree_of_node = k * range(h, k)
-
-    for i in G.nodes:
-        if G.nodes[i]['I']: 
-            append(i).infected_nodes
-    
-    for i in infected_nodes:
-        if i in compliant_infected_nodes:
-            degree_of_node(i) = new_average_degree_of_node
-            beta(i) = beta_after_mask_wearing
-        else:
-            degree_of_node(i) = average_degree_of_node
     return None
 
 
@@ -184,7 +161,7 @@ def soft_lockdown(G, beta):
 
 output = [] # list of list [network_size, beta, avg_degree, time]
 n = 50     
-k = 5       # household's size
+k = 10       # household's size
 p = 0.3     
 beta = 1
 
@@ -201,11 +178,15 @@ for i in G.nodes:
     G.nodes[i]['I_t'] = None
     G.nodes[i]['R'] = False
 
-avg_degree = get_avg_degree(G)
+(new_G, new_beta) = (G, beta)
+#(new_G, new_beta) = hard_lockdown(G, beta)
+
+
+avg_degree = get_avg_degree(new_G)
 #color_draw(G)
 #plt.show()
-time = SEIR(G, beta)
-output.append([n, beta, avg_degree, time])
+time = SEIR(new_G, new_beta)
+output.append([n, new_beta, avg_degree, time])
         
 with open("output.csv", "w", newline="") as f:
     writer = csv.writer(f)
