@@ -124,10 +124,8 @@ def color_draw(G):
 
 
 # TODO: debug
-def hard_lockdown(G, beta): 
+def lockdown(G, beta, max_degree, beta_multiplier, compliance_level): 
     """ this function takes Graph G and beta value beta, and returns modified G and beta. """
-    compliance_level = 0.9
-    household_size = 5 #determined as household size
     neighbors_to_remove = set()
     
     for i in G.nodes:
@@ -135,10 +133,10 @@ def hard_lockdown(G, beta):
         if random.random() <= compliance_level:
             # reduce the edges to 5
             neighbors = set(G.neighbors(i))
-            if len(neighbors) <= household_size:
+            if len(neighbors) <= max_degree:
                 neighbors_to_keep = neighbors
             else:
-                neighbors_to_keep = set(random.sample(neighbors, household_size))
+                neighbors_to_keep = set(random.sample(neighbors, max_degree))
             neighbors_to_remove = neighbors - neighbors_to_keep
             for neighbors_to_remove in neighbors_to_remove:
                 G.remove_edge(i, neighbors_to_remove)
@@ -148,19 +146,18 @@ def hard_lockdown(G, beta):
     
     return (G, new_beta)
 
-# TODO: debug
-def soft_lockdown(G, beta):
-    """ this function takes Graph G and beta value beta, and returns modified G and beta. """
-    # delete edges 
-    return None
+def hard_lockdown(G, beta):
+    return lockdown(G, beta, 5, 0.5, 0.9)
 
+def soft_lockdown(G, beta):
+    return lockdown(G, beta, 20, 0.7, 0.6)
 
 
 
 # Wattz Strogartz network 
 
 output = [] # list of list [network_size, beta, avg_degree, time]
-n = 50     
+n = 100     
 k = 10       # household's size
 p = 0.3     
 beta = 1
