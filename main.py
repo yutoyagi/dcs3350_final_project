@@ -5,31 +5,6 @@ import statistics as stat
 import random
 import csv
 
-# helper functions
-
-"""
-def SI(G, beta):
-    # randomly infect one node
-    rand_idx = random.randrange(0, G.number_of_nodes())
-    G.nodes[rand_idx]['I'] = True
-    # run simulation
-    t = 0
-    while count_I(G) <= (G.number_of_nodes()*0.36):
-        # for each I node
-        I_nodes = [i for i in G.nodes if G.nodes[i]['I'] ]
-        for i in I_nodes:
-            # for each neigbor
-            for nbr in G.neighbors(i):
-                if random.random() <= beta:
-                    # this neighbor is I
-                    G.nodes[nbr]['I'] = True                    
-        t+=1 
-        print(t)
-        if t >= 100000:
-            break
-        #color_draw(G)
-    return t
-"""
 
 # run SEIR model until 36% of nodes are I
 def SEIR(G, beta, case_dict, start_time = 0, end_time = 100000):
@@ -178,13 +153,7 @@ def hard_lockdown(G, beta):
 def soft_lockdown(G, beta):
     return lockdown(G, beta, 20, 0.5, 0.6)
 
-
-
-# Wattz Strogartz network 
-
-def run_simulation(G, lockdown_starts, beta=0.2):
-    n = G.number_of_nodes()
-
+def init_G(G):
     # initiliaze the G labels
     for i in G.nodes: 
         G.nodes[i]['S'] = True
@@ -195,15 +164,22 @@ def run_simulation(G, lockdown_starts, beta=0.2):
         G.nodes[i]['I_a'] = False
         G.nodes[i]['I_t'] = None
         G.nodes[i]['R'] = False
+    return G
+
+# Wattz Strogartz network 
+
+def run_simulation(G, lockdown_starts, beta=0.2):
+    n = G.number_of_nodes()
 
     for lockdown_start in lockdown_starts:
+        for lockdown_type in ["NA", "Soft", "Hard"]:
+            inputG = init_G(G)
+            # let it run before lockdown
+            case_dict=dict()
+            G2, lockdown_start_date, case_dict = SEIR(inputG, beta, case_dict, start_time=0, end_time=lockdown_start)
+            if lockdown_start_date > lockdown_start:
+                raise ValueError
 
-        # let it run before lockdown
-        case_dict=dict()
-        G2, lockdown_start_date, case_dict = SEIR(G, beta, case_dict, start_time=0, end_time=lockdown_start)
-
-
-        for lockdown_type in ["Hard", "Soft", "NA"]:
             if lockdown_type == "Hard":
                 (new_G, new_beta) = hard_lockdown(G2, beta)
             elif lockdown_type == "Soft":
@@ -211,25 +187,24 @@ def run_simulation(G, lockdown_starts, beta=0.2):
             else:
                 (new_G, new_beta) = (G2, beta)
 
-
-            #avg_degree = get_avg_degree(new_G)
             new_G, time, case_dict = SEIR(new_G, new_beta, case_dict, start_time=lockdown_start_date)
 
-            filename = 'outputs/n={0}_type={1}_start={2}.p'.format(n, lockdown_type, time)
-            with open("output.csv", "w", newline="") as f:
+            filename = 'outputs/n={0}_type={1}_start={2}.csv'.format(n, lockdown_type, lockdown_start_date)
+            with open(filename, "w", newline="") as f:
                 writer = csv.writer(f)
-                for data in case_dict:
-                    writer.writerow(data)
+                for key, value in case_dict.items():
+                    writer.writerow([key, value])
+
 
     return None
 
 
-n=1000
+n=10000
 k=30
 p=0.5
 
-lockdown_starts=[30, 60, 90]
-G = nx.nx.watts_strogatz_graph(n, k, p, seed=None)
+lockdown_starts=[10]
+G = nx.watts_strogatz_graph(n, k, p, seed=None)
 run_simulation(G, lockdown_starts, beta=0.2)
 
 
