@@ -193,7 +193,7 @@ def run_simulation(G, lockdown_starts, beta=0.2):
                     writer.writerow([key, value])
     return None
 """
-def run_simulation(G, lockdown_starts,lockdown_types, beta=0.2):
+def run_simulation(G, lockdown_starts, beta=0.2):
     n = G.number_of_nodes()
     G = init_G(G)
     avg_dig = get_avg_degree(G)
@@ -206,7 +206,7 @@ def run_simulation(G, lockdown_starts,lockdown_types, beta=0.2):
         print(lockdown_start_date)
         assert(lockdown_start_date == lockdown_start)
 
-        for lockdown_type in lockdown_types:
+        for lockdown_type in ["NA", "Soft", "Hard"]:
             new_case_dict = copy.deepcopy(case_dict) 
             G3 = copy.deepcopy(G2)
             if lockdown_type == "Hard":
@@ -231,15 +231,12 @@ def run_simulation(G, lockdown_starts,lockdown_types, beta=0.2):
 n=20000
 k=20 # number of connection per node
 p=0.5
-# Only ome of lockdown_starts and lockdown_types should take multiple values.
-lockdown_starts=[10, 30, 60, 90]
-#lockdown_types= ["NA", "Soft", "Hard"]
-lockdown_types = ["Soft"]
 
+lockdown_starts=[10, 30, 60, 90]
 G = nx.watts_strogatz_graph(n, k, p, seed=None)
 #G = nx.barabasi_albert_graph(n, k)
 #G = nx.erdos_renyi_graph(n, prob)
-run_simulation(G, lockdown_starts, lockdown_types, beta=0.45)
+run_simulation(G, lockdown_starts, beta=0.45)
 
 
 
