@@ -228,13 +228,13 @@ def run_simulation(G, lockdown_starts,lockdown_types, beta=0.2):
     return None
 
 
-n=20000
+n=10000
 k=20 # number of connection per node
 p=0.5
 # Only ome of lockdown_starts and lockdown_types should take multiple values.
-lockdown_starts=[10, 30, 60, 90]
-#lockdown_types= ["NA", "Soft", "Hard"]
-lockdown_types = ["Soft"]
+lockdown_starts=[30]
+lockdown_types= ["NA", "Soft", "Hard"]
+#lockdown_types = ["Soft"]
 
 G = nx.watts_strogatz_graph(n, k, p, seed=None)
 #G = nx.barabasi_albert_graph(n, k)
